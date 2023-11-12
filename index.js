@@ -4,6 +4,9 @@ const cors = require("cors");
 const morgan = require("morgan");
 const dotenv = require("dotenv");
 
+// local modules
+const connectToDatabase = require("./utils/connectToDatabase");
+
 // *load values from .env
 dotenv.config();
 
@@ -18,4 +21,11 @@ if (process.env.NODE_ENV === "development") app.use(morgan("dev"));
 
 // *start server
 const PORT = process.env.PORT || 8080;
-app.listen(PORT, () => console.log(`Server is running on port ${PORT}`));
+
+connectToDatabase()
+  .then(() => {
+    app.listen(PORT, () => console.log(`Server is running on port ${PORT}`));
+  })
+  .catch(() => {
+    console.log("Error while connecting to database");
+  });
