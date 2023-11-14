@@ -1,6 +1,6 @@
 const mongoose = require("mongoose");
 
-const connect = async () => {
+const connectToDatabase = async () => {
   if (process.env.NODE_ENV === "development") {
     await mongoose.connect(process.env.DATABASE_URI_DEV);
     console.log("connected to dev database");
@@ -10,4 +10,4 @@ const connect = async () => {
   }
 };
 
-module.exports = connect;
+module.exports = connectToDatabase;
