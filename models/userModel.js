@@ -15,6 +15,10 @@ const userSchema = new mongoose.Schema(
             unique: [true, "Email already exists"],
             validate: [validator.isEmail, "Email is invalid"],
         },
+        profileImage: {
+            type: String,
+            default: "",
+        },
         password: {
             type: String,
             select: false,
@@ -73,30 +77,7 @@ userSchema.pre("save", async function (next) {
 userSchema.pre("save", async function (next) {
     console.log(`A new user has been created with id ${this._id}`)
     if (!this.isNew) return next()
-    // confirmation url
-    const confirmationLink = `${
-        process.env.NODE_ENV === "development"
-            ? process.env.WEBSITE_DEV
-            : process.env.WEBSITE_PROD
-    }/api/v1/auth/confirm/${this._id}/${this.emailConfirmationCode}`
-
-    // mail template
-    const html = `
-            <h3>Hi ,${this.fullName}</h3>
-            <p>Welcome to our video chat app this your confirmation link : <br />
-            <a href="${confirmationLink}">Click here to confirm your email</a>
-            </p>
-  `
-    if (
-        !(await new sendMail().send(
-            this.email,
-            "Password confirmation",
-            html,
-            confirmationLink
-        ))
-    ) {
-        throw new appError("Error in sending email please try again later", 500)
-    }
+    this.sendConfirmationMail()
     next()
 })
 
@@ -112,7 +93,6 @@ userSchema.methods.comparePasswords = async function (
 userSchema.methods.activateUserAccount = async function () {
     if (this.active) throw new appError("Account already activated", 400)
     this.active = true
-    this.emailConfirmationCode = undefined
     await this.save({ validateBeforeSave: false })
 }
 
@@ -132,11 +112,12 @@ userSchema.methods.createResetToken = async function () {
             <a href="${resetLink}">Click here to reset your password</a>
             </p>
   `
-    if (!new sendMail().send(this.email, "Reset password", html, resetLink)) {
-        this.passwordResetExpireDate = undefined
-        this.passwordResetExpireDate = undefined
-        throw new appError("Error in sending email please try again later", 500)
-    }
+    new sendMail()
+        .send(this.email, "Reset password", html, resetLink)
+        .catch(() => {
+            this.passwordResetExpireDate = undefined
+            this.passwordResetExpireDate = undefined
+        })
 }
 
 // change password
@@ -147,5 +128,30 @@ userSchema.methods.setPassword = async function (password, passwordConfirm) {
     this.passwordResetExpireDate = undefined
     this.passwordResetToken = undefined
     await this.save()
+}
+
+// resend confirmation mail
+userSchema.methods.sendConfirmationMail = async function () {
+    if (this.active) throw new appError("Your account already activated", 400)
+    // confirmation url
+    const confirmationLink = `${
+        process.env.NODE_ENV === "development"
+            ? process.env.WEBSITE_DEV
+            : process.env.WEBSITE_PROD
+    }/confirm/${this._id}/${this.emailConfirmationCode}`
+
+    // mail template
+    const html = `
+            <h3>Hi ,${this.fullName}</h3>
+            <p>Welcome to our video chat app this your confirmation link : <br />
+            <a href="${confirmationLink}">Click here to confirm your email</a>
+            </p>
+  `
+    new sendMail().send(
+        this.email,
+        "Password confirmation",
+        html,
+        confirmationLink
+    )
 }
 module.exports = mongoose.model("User", userSchema)

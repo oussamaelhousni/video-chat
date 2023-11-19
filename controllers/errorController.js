@@ -19,7 +19,7 @@ const sendErrorDev = (res, error) => {
 }
 
 const sendErrorProd = (res, error) => {
-    let err = { ...error, name: error.name }
+    let err = { ...error, name: error.name, message: error.message }
     if (err.code === 11000) {
         err = handleDuplicateValues(error)
     }

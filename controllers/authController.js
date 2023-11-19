@@ -1,4 +1,4 @@
-const { userModel } = require("../models")
+const { userModel, tokenModel } = require("../models")
 const { catchAsync, appError } = require("../utils")
 const createJwt = require("../utils/createJwt")
 
@@ -9,7 +9,8 @@ const register = catchAsync(async (req, res, next) => {
     await userModel.create(req.body)
     res.status(200).json({
         status: "success",
-        message: "User created successfully",
+        message:
+            "User created successfully, please check out your email for account confirmation",
     })
 })
 
@@ -21,7 +22,7 @@ const confirmEmail = catchAsync(async (req, res, next) => {
     const user = await userModel
         .findOne({ _id: id, emailConfirmationCode })
         .select("+active")
-    if (!user) throw new appError("User not found", 404)
+    if (!user) throw new appError("Confirmation link is invalid :(", 404)
     await user.activateUserAccount()
     res.status(200).json({
         status: "success",
@@ -41,8 +42,14 @@ const login = catchAsync(async (req, res, next) => {
     // generate token and send it to the client
     return res.status(200).json({
         status: "success",
+        message: "User Logged in successfully",
         data: {
             token: await createJwt(user._id),
+            user: {
+                fullName: user.fullName,
+                email: user.email,
+                profileImage: user.profileImage,
+            },
         },
     })
 })
@@ -79,10 +86,41 @@ const resetPassword = catchAsync(async (req, res, next) => {
     })
 })
 
+// @desc   reset confirmation Mail
+// @route   POST /api/v1/auth/resend-confirmation-email
+// @access   Public
+const resendConfirmationMail = catchAsync(async (req, res, next) => {
+    const { email } = req.body
+    const user = await userModel
+        .findOne({
+            email,
+        })
+        .select("+active")
+    if (!user) throw new appError("User not found", 404)
+    await user.sendConfirmationMail()
+    return res.status(200).json({
+        status: "success",
+        message: "Email is send successfully",
+    })
+})
+
+// @desc   logout
+// @route   POST /api/v1/auth/logout
+// @access   Private
+const logout = catchAsync(async (req, res, next) => {
+    await tokenModel.create({ token: req.token })
+    return res.status(200).json({
+        status: "success",
+        message: "User logged out successfully",
+    })
+})
+
 module.exports = {
     register,
     confirmEmail,
     login,
     forgetPassword,
     resetPassword,
+    resendConfirmationMail,
+    logout,
 }
