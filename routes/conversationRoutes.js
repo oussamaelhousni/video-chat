@@ -4,6 +4,6 @@ const { conversationsController } = require("../controllers")
 
 const router = express.Router()
 
-router("/").post(conversationsController.createConversation)
+router.route("/").post(conversationsController.createConversation)
 
 module.exports = router

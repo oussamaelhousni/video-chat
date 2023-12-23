@@ -9,7 +9,7 @@ const dotenv = require("dotenv")
 const { connectToDatabase } = require("./utils")
 const { globalErrorHandler } = require("./controllers")
 // routers
-const { authRouter } = require("./routes")
+const { authRouter, conversationRouter } = require("./routes")
 
 // load values from .env
 dotenv.config()
@@ -24,9 +24,11 @@ if (process.env.NODE_ENV === "development") app.use(morgan("dev"))
 
 // routes
 app.use("/api/v1/auth", authRouter)
+app.use("/api/v1/conversations", conversationRouter)
 
 // global error handler
 app.use(globalErrorHandler)
+
 // start server
 const PORT = process.env.PORT || 8080
 
