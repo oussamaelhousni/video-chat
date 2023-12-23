@@ -28,6 +28,10 @@ const messageSchema = new mongoose.Schema(
         audio: {
             type: mongoose.Schema.Types.Buffer,
         },
+        isSeen: {
+            type: Boolean,
+            default: false,
+        },
         text: String,
     },
     { timestamps: true }
