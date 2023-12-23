@@ -41,6 +41,8 @@ conversationSchema.virtual("nbrOfUnreadMessages").get(async function () {
     return nbrOfUnreadMessage
 })
 
+conversationSchema.index({ userOne: 1, userTwo: 1 }, { unique: true })
+
 const conversationModel = mongoose.model("Conversation", conversationSchema)
 
 module.exports = conversationModel

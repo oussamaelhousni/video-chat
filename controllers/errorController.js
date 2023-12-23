@@ -1,6 +1,11 @@
 const { appError } = require("../utils")
 
 const handleDuplicateValues = (err) => {
+    if (
+        Object.keys(err.keyPattern).join("").includes("userOne") ||
+        Object.keys(err.keyPattern).join("").includes("userTwo")
+    )
+        return new appError(`Conversation already exists`, 400)
     return new appError(`${Object.keys(err.keyValue)[0]} already exists`, 400)
 }
 
@@ -27,8 +32,8 @@ const sendErrorProd = (res, error) => {
     if (err.name == "ValidationError") {
         err = handleValidationError(err)
     }
-    console.log("after val error", err)
     if (err.isOperational) {
+        console.log("hello")
         return res.status(err.statusCode).json({
             status: err.status,
             message: err.message,
