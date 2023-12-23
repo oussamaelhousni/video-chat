@@ -6,4 +6,9 @@ const router = express.Router()
 
 router.route("/").post(conversationsController.createConversation)
 
+router
+    .route("/:id")
+    .delete(conversationsController.deleteConversation)
+    .get(conversationsController.getConversation)
+
 module.exports = router
