@@ -1,5 +1,17 @@
 const mongoose = require("mongoose")
 
+const callSchema = new mongoose.Schema({
+    startedAt: {
+        type: Date,
+        default: Date.now(),
+    },
+    endedAt: Date,
+    type: {
+        type: String,
+        enum: ["video", "audio"],
+    },
+})
+
 const messageSchema = new mongoose.Schema(
     {
         sender: {
@@ -28,6 +40,8 @@ const messageSchema = new mongoose.Schema(
         audio: {
             type: mongoose.Schema.Types.Buffer,
         },
+        //call
+        call: callSchema,
         isSeen: {
             type: Boolean,
             default: false,
