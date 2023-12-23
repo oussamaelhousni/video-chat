@@ -15,6 +15,16 @@ const userSchema = new mongoose.Schema(
             unique: [true, "Email already exists"],
             validate: [validator.isEmail, "Email is invalid"],
         },
+        friends: {
+            type: [mongoose.Schema.Types.ObjectId],
+            ref: "User",
+            default: [],
+        },
+        blockedFriends: {
+            type: [mongoose.Schema.Types.ObjectId],
+            ref: "User",
+            default: [],
+        },
         profileImage: {
             type: String,
             default: "",
