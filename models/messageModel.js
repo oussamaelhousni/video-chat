@@ -1,6 +1,14 @@
 const mongoose = require("mongoose")
 
 const callSchema = new mongoose.Schema({
+    isAnswered: {
+        type: Boolean,
+        default: false,
+    },
+    isRejected: {
+        type: Boolean,
+        default: false,
+    },
     startedAt: {
         type: Date,
         default: Date.now(),
