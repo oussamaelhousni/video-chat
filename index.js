@@ -1,6 +1,7 @@
+const http = require("http")
 const express = require("express")
 const os = require("os")
-const io = require("socket.io")
+const { Server } = require("socket.io")
 const cors = require("cors")
 const morgan = require("morgan")
 const dotenv = require("dotenv")
@@ -31,10 +32,13 @@ app.use(globalErrorHandler)
 
 // start server
 const PORT = process.env.PORT || 8080
+const server = http.createServer(app)
+
+io = new Server(server)
 
 connectToDatabase()
     .then(() => {
-        app.listen(PORT, () => {
+        server.listen(PORT, () => {
             console.log(`Server is running on port ${PORT}`)
         })
     })
