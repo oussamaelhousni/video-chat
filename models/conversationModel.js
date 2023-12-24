@@ -91,10 +91,12 @@ conversationSchema.statics.getConversation = async function (
         this.findOne({
             userOne: userId,
             _id: conversationId,
+            "deletedByUserOne.isDeleted": false,
         }),
         this.findOne({
             userTwo: userId,
             _id: conversationId,
+            "deletedByUserTwo.isDeleted": false,
         }),
     ])
 
@@ -117,21 +119,23 @@ conversationSchema.statics.deleteConversation = async function (
         this.findOne({
             userOne: userId,
             _id: conversationId,
-        }),
+        }).select("+deletedByUserOne"),
         this.findOne({
             userTwo: userId,
             _id: conversationId,
-        }),
+        }).select("+deletedByUserTwo"),
     ])
 
     if (conversationOne) {
-        conversationOne.isDeleteFromUserOne = true
+        conversationOne.deletedByUserOne.isDeleted = true
+        conversationOne.deletedByUserOne.deletedAt = Date.now()
         await conversationOne.save()
         return
     }
 
     if (conversationTwo) {
-        conversationTwo.isDeleteFromUserTwo = true
+        conversationTwo.deletedByUserTwo.isDeleted = true
+        conversationTwo.deletedByUserTwo.deletedAt = Date.now()
         await conversationTwo.save()
         return
     }
@@ -151,7 +155,6 @@ conversationSchema.statics.createConversation = async function ({
     ])
 
     if (conversationOne && conversationOne.deletedByUserOne.isDeleted == true) {
-        console.log(conversationOne)
         conversationOne.deletedByUserOne.isDeleted = false
         await conversationOne.save()
         return

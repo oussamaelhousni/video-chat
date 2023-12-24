@@ -28,7 +28,6 @@ exports.deleteConversation = catchAsync(async (req, res, next) => {
 // Description: get one conversation
 // Access: Private
 exports.getConversation = catchAsync(async (req, res, next) => {
-    console.log(req.body)
     const conversation = await conversationModel.getConversation(
         req.params.id,
         req.body.user
