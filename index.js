@@ -1,12 +1,11 @@
 const http = require("http")
 const express = require("express")
-const os = require("os")
-const { Server } = require("socket.io")
 const cors = require("cors")
 const morgan = require("morgan")
 const dotenv = require("dotenv")
 
 // local modules
+const { CONNECTED_USERS } = require("./constants")
 const createSocketServer = require("./socketServer")
 const { connectToDatabase } = require("./utils")
 const { globalErrorHandler } = require("./controllers")
@@ -39,7 +38,10 @@ io = createSocketServer(server)
 
 connectToDatabase()
     .then(() => {
-        server.listen(PORT, () => {
+        server.listen(PORT, "127.0.0.1", () => {
+            // share socket emitter over the app
+            app.set("io", io)
+            app.set("CONNECTED_USERS", CONNECTED_USERS)
             console.log(`Server is running on port ${PORT}`)
         })
     })
