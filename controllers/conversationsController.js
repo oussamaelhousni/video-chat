@@ -5,7 +5,7 @@ const { conversationModel } = require("../models")
 // Description: Create a new conversation
 // Access: Private
 exports.createConversation = catchAsync(async (req, res, next) => {
-    const conversation = await conversationModel.create(req.body)
+    const conversation = await conversationModel.createConversation(req.body)
     return res.status(201).json({
         status: "success",
         data: { conversation },
@@ -28,6 +28,7 @@ exports.deleteConversation = catchAsync(async (req, res, next) => {
 // Description: get one conversation
 // Access: Private
 exports.getConversation = catchAsync(async (req, res, next) => {
+    console.log(req.body)
     const conversation = await conversationModel.getConversation(
         req.params.id,
         req.body.user

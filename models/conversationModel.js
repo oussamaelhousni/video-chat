@@ -14,7 +14,7 @@ const conversationSchema = new mongoose.Schema(
             ref: "User",
             required: [true, "please provide user two"],
         },
-        isDeleteFromUserOne: {
+        /* isDeleteFromUserOne: {
             type: Boolean,
             default: false,
             select: false,
@@ -23,6 +23,35 @@ const conversationSchema = new mongoose.Schema(
             type: Boolean,
             default: false,
             select: false,
+        },
+
+        /*******************************************************************************************************************************/
+        /* it helps us to implement the functionality that when a user deleted the conversation other user can still have the messages */
+        /*******************************************************************************************************************************/
+
+        deletedByUserOne: {
+            isDeleted: {
+                type: Boolean,
+                default: false,
+                select: false,
+            },
+            deletedAt: {
+                type: Date,
+                default: null,
+                select: false,
+            },
+        },
+        deletedByUserTwo: {
+            isDeleted: {
+                type: Boolean,
+                default: false,
+                select: false,
+            },
+            deletedAt: {
+                type: Date,
+                default: null,
+                select: false,
+            },
         },
     },
     {
@@ -57,6 +86,7 @@ conversationSchema.statics.getConversation = async function (
     conversationId,
     userId
 ) {
+    console.log(conversationId, userId)
     const [conversationOne, conversationTwo] = await Promise.all([
         this.findOne({
             userOne: userId,
@@ -107,9 +137,36 @@ conversationSchema.statics.deleteConversation = async function (
     }
 }
 
-conversationSchema.pre("findOne", async function () {
-    this.where({ isDeleteFromUserOne: false, isDeleteFromUserTwo: false })
-})
+// create conversation
+conversationSchema.statics.createConversation = async function ({
+    userOne,
+    userTwo,
+}) {
+    // the user who request to create new  conversation also his id  is userOne
+    const [conversationOne, conversationTwo] = await Promise.all([
+        this.findOne({ userOne, userTwo }).select("deletedByUserOne"),
+        this.findOne({ userOne: userTwo, userTwo, userOne }).select(
+            "deletedByUserTwo"
+        ),
+    ])
+
+    if (conversationOne && conversationOne.deletedByUserOne.isDeleted == true) {
+        console.log(conversationOne)
+        conversationOne.deletedByUserOne.isDeleted = false
+        await conversationOne.save()
+        return
+    }
+
+    if (conversationTwo && conversationTwo.deletedByUserTwo.isDeleted == true) {
+        conversationTwo.deletedByUserTwo.isDeleted = false
+        await conversationTwo.save()
+        return
+    }
+
+    return await conversationModel.create({ userOne, userTwo })
+}
+
+conversationSchema.pre("findOne", async function () {})
 
 conversationSchema.index({ userOne: 1, userTwo: 1 }, { unique: true })
 
