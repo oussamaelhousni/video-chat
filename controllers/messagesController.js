@@ -11,20 +11,17 @@ exports.createMessage = catchAsync(async (req, res, next) => {
     if (!req.params.conversationId)
         return next(new appError("Please provide conversation id", 400))
 
-    const { sender, receiver, text } = req.body
-
+    console.log("req", { ...req.body })
     const message = await messageModel.create({
-        sender,
-        receiver,
-        text,
         conversation: req.params.conversationId,
+        ...req.body,
     })
 
     if (
-        CONNECTED_USERS.get(receiver) &&
-        CONNECTED_USERS.get(receiver).length > 0
+        CONNECTED_USERS.get(req.body.receiver) &&
+        CONNECTED_USERS.get(req.body.receiver).length > 0
     ) {
-        CONNECTED_USERS.get(receiver).forEach((id) => {
+        CONNECTED_USERS.get(req.body.receiver).forEach((id) => {
             io.to(id).emit("message", message)
         })
     }

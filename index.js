@@ -1,5 +1,6 @@
 const http = require("http")
 const express = require("express")
+const bodyParser = require("body-parser")
 const cors = require("cors")
 const morgan = require("morgan")
 const dotenv = require("dotenv")
@@ -21,6 +22,7 @@ const app = express()
 // *middlewares
 app.use(cors())
 app.use(express.json())
+
 if (process.env.NODE_ENV === "development") app.use(morgan("dev"))
 
 // routes

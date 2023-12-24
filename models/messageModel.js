@@ -50,6 +50,10 @@ const messageSchema = new mongoose.Schema(
         },
         //call
         call: callSchema,
+        isDelivered: {
+            type: Boolean,
+            default: false,
+        },
         isSeen: {
             type: Boolean,
             default: false,
