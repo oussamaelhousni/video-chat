@@ -7,6 +7,7 @@ const morgan = require("morgan")
 const dotenv = require("dotenv")
 
 // local modules
+const createSocketServer = require("./socketServer")
 const { connectToDatabase } = require("./utils")
 const { globalErrorHandler } = require("./controllers")
 // routers
@@ -34,7 +35,7 @@ app.use(globalErrorHandler)
 const PORT = process.env.PORT || 8080
 const server = http.createServer(app)
 
-io = new Server(server)
+io = createSocketServer(server)
 
 connectToDatabase()
     .then(() => {
