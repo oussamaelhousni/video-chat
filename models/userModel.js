@@ -3,6 +3,7 @@ const validator = require("validator")
 const bcrypt = require("bcrypt")
 const os = require("os")
 const { sendMail, codeGenerator, appError } = require("../utils")
+const { query } = require("express")
 
 const userSchema = new mongoose.Schema(
     {
@@ -169,4 +170,85 @@ userSchema.methods.sendConfirmationMail = async function () {
         confirmationLink
     )
 }
+
+// search users
+userSchema.statics.searchUsers = async function (user, query) {
+    const users = await this.aggregate([
+        {
+            $match: {
+                _id: { $ne: new mongoose.Types.ObjectId(user._id) },
+                active: { $eq: true },
+                $expr: {
+                    $not: {
+                        $in: [
+                            new mongoose.Types.ObjectId(user._id),
+                            "$blockedFriends",
+                        ],
+                    },
+                },
+            },
+        },
+        {
+            $match: query,
+        },
+        {
+            $addFields: {
+                isBlocked: {
+                    $cond: [
+                        {
+                            $in: [
+                                "$_id",
+                                user.blockedFriends.map(
+                                    (i) => new mongoose.Types.ObjectId(i)
+                                ),
+                            ],
+                        },
+                        true,
+                        false,
+                    ],
+                },
+                isFriend: {
+                    $cond: [
+                        {
+                            $in: [
+                                "$_id",
+                                user.friends.map(
+                                    (i) => new mongoose.Types.ObjectId(i)
+                                ),
+                            ],
+                        },
+                        true,
+                        false,
+                    ],
+                },
+                isPending: {
+                    $cond: [
+                        {
+                            $in: [
+                                "$_id",
+                                user.pendingRequests.map(
+                                    (i) => new mongoose.Types.ObjectId(i)
+                                ),
+                            ],
+                        },
+                        true,
+                        false,
+                    ],
+                },
+            },
+        },
+        {
+            $project: {
+                fullName: 1,
+                isBlocked: 1,
+                isPending: 1,
+                isFriend: 1,
+                profileImage: 1,
+                email: 1,
+            },
+        },
+    ])
+    return users
+}
+
 module.exports = mongoose.model("User", userSchema)

@@ -11,7 +11,7 @@ const createSocketServer = require("./socketServer")
 const { connectToDatabase } = require("./utils")
 const { globalErrorHandler } = require("./controllers")
 // routers
-const { authRouter, conversationRouter } = require("./routes")
+const { authRouter, conversationRouter, userRouter } = require("./routes")
 
 // load values from .env
 dotenv.config()
@@ -22,7 +22,7 @@ const app = express()
 // *middlewares
 app.use(
     cors({
-        origin: ["http://localhost:5173"],
+        origin: ["http://localhost:5173", "http://localhost:4000"],
     })
 )
 app.use(express.json())
@@ -32,6 +32,7 @@ if (process.env.NODE_ENV === "development") app.use(morgan("dev"))
 // routes
 app.use("/api/v1/auth", authRouter)
 app.use("/api/v1/conversations", conversationRouter)
+app.use("/api/v1/users", userRouter)
 
 // global error handler
 app.use(globalErrorHandler)
