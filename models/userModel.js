@@ -15,6 +15,11 @@ const userSchema = new mongoose.Schema(
             unique: [true, "Email already exists"],
             validate: [validator.isEmail, "Email is invalid"],
         },
+        pendingRequests: {
+            type: [mongoose.Schema.Types.ObjectId],
+            ref: "User",
+            default: [],
+        },
         friends: {
             type: [mongoose.Schema.Types.ObjectId],
             ref: "User",

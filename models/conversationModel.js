@@ -56,19 +56,14 @@ const conversationSchema = new mongoose.Schema(
     },
     {
         timestamps: true,
-        toJSON: {
-            virtuals: true,
-        },
-        toObject: {
-            virtuals: true,
-        },
+        virtuals: true,
     }
 )
 
 conversationSchema.virtual("lastMessage").get(async function () {
+    console.log("Getting last message for conversation:", this._id)
     const message = await messageModel
         .findOne({ conversation: this._id })
-        .lean()
         .sort({ _id: -1 })
     return message
 })
@@ -76,7 +71,6 @@ conversationSchema.virtual("lastMessage").get(async function () {
 conversationSchema.virtual("nbrOfUnreadMessages").get(async function () {
     const nbrOfUnreadMessage = await messageModel
         .find({ conversation: this._id, isSeen: false })
-        .lean()
         .count()
     return nbrOfUnreadMessage
 })

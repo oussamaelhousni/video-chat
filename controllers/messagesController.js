@@ -11,7 +11,6 @@ exports.createMessage = catchAsync(async (req, res, next) => {
     if (!req.params.conversationId)
         return next(new appError("Please provide conversation id", 400))
 
-    console.log("req", { ...req.body })
     const message = await messageModel.create({
         conversation: req.params.conversationId,
         ...req.body,
@@ -26,5 +25,8 @@ exports.createMessage = catchAsync(async (req, res, next) => {
         })
     }
 
-    return res.status(201).json("ji")
+    return res.status(201).json({
+        status: "success",
+        data: { message },
+    })
 })

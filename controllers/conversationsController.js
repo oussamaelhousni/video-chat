@@ -6,6 +6,8 @@ const { conversationModel } = require("../models")
 // Access: Private
 exports.createConversation = catchAsync(async (req, res, next) => {
     const conversation = await conversationModel.createConversation(req.body)
+    conversation.lastMessage = await conversationModel.lastMessage
+
     return res.status(201).json({
         status: "success",
         data: { conversation },
@@ -32,7 +34,6 @@ exports.getConversation = catchAsync(async (req, res, next) => {
         req.params.id,
         req.body.user
     )
-
     return res.status(200).json({
         status: "success",
         data: { conversation },
