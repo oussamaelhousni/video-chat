@@ -3,7 +3,6 @@ const validator = require("validator")
 const bcrypt = require("bcrypt")
 const os = require("os")
 const { sendMail, codeGenerator, appError } = require("../utils")
-const { query } = require("express")
 
 const userSchema = new mongoose.Schema(
     {
@@ -224,12 +223,7 @@ userSchema.statics.searchUsers = async function (user, query) {
                 isPending: {
                     $cond: [
                         {
-                            $in: [
-                                "$_id",
-                                user.pendingRequests.map(
-                                    (i) => new mongoose.Types.ObjectId(i)
-                                ),
-                            ],
+                            $in: [user._id, "$pendingRequests"],
                         },
                         true,
                         false,
@@ -244,11 +238,102 @@ userSchema.statics.searchUsers = async function (user, query) {
                 isPending: 1,
                 isFriend: 1,
                 profileImage: 1,
-                email: 1,
             },
         },
     ])
     return users
 }
 
+//block user
+userSchema.statics.blockUser = async function (user, blockedUserId) {
+    await this.findByIdAndUpdate(user._id, {
+        $addToSet: {
+            blockedFriends: new mongoose.Types.ObjectId(blockedUserId),
+        },
+    })
+}
+
+// unblock a user
+userSchema.statics.unBlockUser = async function (user, blockedUserId) {
+    await this.findByIdAndUpdate(user._id, {
+        $pull: {
+            blockedFriends: new mongoose.Types.ObjectId(blockedUserId),
+        },
+    })
+}
+
+// send Friend Request
+userSchema.statics.sendFriendRequest = async function (user, userId) {
+    const tempUser = await this.findOneAndUpdate(
+        {
+            _id: userId,
+            friends: {
+                $nin: [user._id],
+            },
+            pendingRequests: {
+                $nin: [user._id],
+            },
+        },
+        {
+            $addToSet: {
+                pendingRequests: user._id,
+            },
+        }
+    )
+    if (!tempUser) throw new appError("friend request not sended", 400)
+}
+
+// send Friend Request
+userSchema.statics.cancelFriendRequest = async function (user, userId) {
+    await this.findOneAndUpdate(
+        {
+            _id: userId,
+            pendingRequests: {
+                $in: [user._id],
+            },
+        },
+        {
+            $pull: {
+                pendingRequests: user._id,
+            },
+        }
+    )
+}
+
+// send Friend Request
+userSchema.statics.acceptFriendRequest = async function (user, userId) {
+    await this.findOneAndUpdate(
+        {
+            _id: user._id,
+            pendingRequests: {
+                $in: [new mongoose.Types.ObjectId(userId)],
+            },
+        },
+        {
+            $pull: {
+                pendingRequests: new mongoose.Types.ObjectId(userId),
+            },
+            $addToSet: {
+                friends: new mongoose.Types.ObjectId(userId),
+            },
+        }
+    )
+}
+
+// send Friend Request
+userSchema.statics.unfriend = async function (user, userId) {
+    await this.findOneAndUpdate(
+        {
+            _id: user._id,
+            friends: {
+                $in: [new mongoose.Types.ObjectId(userId)],
+            },
+        },
+        {
+            $pull: {
+                friends: new mongoose.Types.ObjectId(userId),
+            },
+        }
+    )
+}
 module.exports = mongoose.model("User", userSchema)
