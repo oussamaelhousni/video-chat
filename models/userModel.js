@@ -336,4 +336,37 @@ userSchema.statics.unfriend = async function (user, userId) {
         }
     )
 }
+
+// get friend requests
+userSchema.statics.getFriendRequests = async function (user) {
+    const users = await this.aggregate([
+        {
+            $match: {
+                _id: user._id,
+            },
+        },
+        {
+            $unwind: {
+                path: "$pendingRequests",
+                preserveNullAndEmptyArrays: false,
+            },
+        },
+        {
+            $lookup: {
+                from: "users",
+                localField: "pendingRequests",
+                foreignField: "_id",
+                as: "user",
+            },
+        },
+        {
+            $project: {
+                id: { $arrayElemAt: ["$user._id", 0] },
+                fullName: { $arrayElemAt: ["$user.fullName", 0] },
+                profileImage: { $arrayElemAt: ["$user.profileImage", 0] },
+            },
+        },
+    ])
+    return { users, count: user.pendingRequests.length }
+}
 module.exports = mongoose.model("User", userSchema)
