@@ -4,7 +4,7 @@ const { CONNECTED_USERS } = require("./constants")
 function createSocketServer(server) {
     const io = new Server(server, {
         cors: {
-            origin: ["http://localhost:5173", "http://localhost:4000"],
+            origin: "*",
             credentials: true,
         },
     })

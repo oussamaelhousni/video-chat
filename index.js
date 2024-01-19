@@ -20,11 +20,7 @@ dotenv.config()
 const app = express()
 
 // *middlewares
-app.use(
-    cors({
-        origin: ["http://localhost:5173", "http://localhost:4000"],
-    })
-)
+app.use(cors())
 app.use(express.json())
 
 if (process.env.NODE_ENV === "development") app.use(morgan("dev"))

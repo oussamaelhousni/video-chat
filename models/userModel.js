@@ -369,4 +369,5 @@ userSchema.statics.getFriendRequests = async function (user) {
     ])
     return { users, count: user.pendingRequests.length }
 }
+
 module.exports = mongoose.model("User", userSchema)
