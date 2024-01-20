@@ -16,6 +16,10 @@ router
     .route("/acceptFriendRequest/:userId")
     .post(protect, usersController.acceptFriendRequest)
 
+router
+    .route("/declineFriendRequest/:userId")
+    .post(protect, usersController.declineFriendRequest)
+
 router.route("/unfriend/:userId").post(protect, usersController.unfriend)
 
 module.exports = router

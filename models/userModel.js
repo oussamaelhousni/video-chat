@@ -266,7 +266,12 @@ userSchema.statics.unBlockUser = async function (user, blockedUserId) {
 userSchema.statics.sendFriendRequest = async function (user, userId) {
     const tempUser = await this.findOneAndUpdate(
         {
-            _id: userId,
+            $and: [
+                {
+                    _id: userId,
+                    _id: { $ne: user._id.toString() },
+                },
+            ],
             friends: {
                 $nin: [user._id],
             },
@@ -285,6 +290,12 @@ userSchema.statics.sendFriendRequest = async function (user, userId) {
 
 // send Friend Request
 userSchema.statics.cancelFriendRequest = async function (user, userId) {
+    console.log("find", {
+        _id: userId,
+        pendingRequests: {
+            $in: [user._id],
+        },
+    })
     await this.findOneAndUpdate(
         {
             _id: userId,
@@ -315,6 +326,23 @@ userSchema.statics.acceptFriendRequest = async function (user, userId) {
             },
             $addToSet: {
                 friends: new mongoose.Types.ObjectId(userId),
+            },
+        }
+    )
+}
+
+// send Friend Request
+userSchema.statics.declineFriendRequest = async function (user, userId) {
+    await this.findOneAndUpdate(
+        {
+            _id: user._id,
+            pendingRequests: {
+                $in: [userId],
+            },
+        },
+        {
+            $pull: {
+                pendingRequests: userId,
             },
         }
     )

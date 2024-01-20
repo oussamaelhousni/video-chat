@@ -1,6 +1,8 @@
 const mongoose = require("mongoose")
 const { catchAsync, appError, handleSearch } = require("../utils")
+const { userEvents } = require("../events")
 const { userModel } = require("../models")
+const { CONNECTED_USERS } = require("../constants")
 
 // @desc   Search users
 // @route   GET /api/v1/users
@@ -61,11 +63,18 @@ exports.unBlockUser = catchAsync(async (req, res, next) => {
     })
 })
 
-// @desc   Search users
-// @route   POST /api/v1/users/block
+// @desc   send a friend request
+// @route   POST /api/v1/users/sendFriendRequest
 // @access   private
+// @socket send notification to client with the friend request
 exports.sendFriendRequest = catchAsync(async (req, res, next) => {
     await userModel.sendFriendRequest(req.user, req.body.userId)
+
+    userEvents.sendNotification(req.app.get("io"), req.body.userId, {
+        fullName: req.user.fullName,
+        profileImage: req.user.profileImage,
+        _id: req.user._id,
+    })
     return res.status(201).json({
         type: "success",
         message: "request sended successfully",
@@ -73,22 +82,17 @@ exports.sendFriendRequest = catchAsync(async (req, res, next) => {
     })
 })
 
-// @desc   Search users
-// @route   POST /api/v1/users/block
+// @desc   cancel a friend request
+// @route   POST /api/v1/users/cancelFriendRequest
 // @access   private
+// @socket send removeNotification event to client to remove friend request notification
 exports.cancelFriendRequest = catchAsync(async (req, res, next) => {
-    const user = {
-        _id: new mongoose.Types.ObjectId("655a46a9ccfe789981eb7abe"),
-        fullName: "oussama elhousni",
-        email: "oussamaelhousni94@gmail.com",
-        profileImage: "",
-        active: true,
-        __v: 0,
-        pendingRequests: ["658724ccf671f52a0e799e39"],
-        blockedFriends: ["6591851c3e718feabbc24f37"],
-        friends: ["6591852d3e718feabbc24f38"],
-    }
-    await userModel.cancelFriendRequest(user, req.body.userId)
+    await userModel.cancelFriendRequest(req.user, req.body.userId)
+    userEvents.removeNotification(
+        req.app.get("io"),
+        req.user._id.toString(),
+        req.body.userId
+    )
     return res.status(201).json({
         type: "success",
         message: "request canceled successfully",
@@ -101,9 +105,22 @@ exports.cancelFriendRequest = catchAsync(async (req, res, next) => {
 // @access   private
 exports.acceptFriendRequest = catchAsync(async (req, res, next) => {
     await userModel.acceptFriendRequest(req.user, req.params.userId)
+
     return res.status(200).json({
         type: "success",
         message: "unfriend successfully",
+    })
+})
+
+// @desc   decline friend request
+// @route   POST /api/v1/users/declineFriendRequest/:userId
+// @access   private
+exports.declineFriendRequest = catchAsync(async (req, res, next) => {
+    console.log("salam")
+    await userModel.declineFriendRequest(req.user, req.params.userId)
+    return res.status(200).json({
+        type: "success",
+        message: "request declined successfully",
     })
 })
 

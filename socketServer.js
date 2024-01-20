@@ -11,13 +11,12 @@ function createSocketServer(server) {
 
     io.on("connect", (socket) => {
         // this event is should be fired whenever a user connected to our server
-        console.log("new user")
         socket.on("init", (payload) => {
             let data = payload
             if (typeof payload === "string") {
                 data = JSON.parse(payload)
             }
-            console.log(data.userId)
+            console.log("marhba", data.userId)
             // store connected users in map so we can send messages to them later
             CONNECTED_USERS.set(data.userId, [
                 ...new Set([

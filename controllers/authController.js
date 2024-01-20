@@ -46,6 +46,7 @@ const login = catchAsync(async (req, res, next) => {
         data: {
             token: await createJwt(user._id),
             user: {
+                _id: user._id,
                 fullName: user.fullName,
                 email: user.email,
                 profileImage: user.profileImage,
