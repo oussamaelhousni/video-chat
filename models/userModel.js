@@ -269,8 +269,8 @@ userSchema.statics.sendFriendRequest = async function (user, userId) {
             $and: [
                 {
                     _id: userId,
-                    _id: { $ne: user._id.toString() },
                 },
+                { _id: { $ne: user._id.toString() } },
             ],
             friends: {
                 $nin: [user._id],
@@ -313,27 +313,8 @@ userSchema.statics.cancelFriendRequest = async function (user, userId) {
 
 // send Friend Request
 userSchema.statics.acceptFriendRequest = async function (user, userId) {
-    await this.findOneAndUpdate(
-        {
-            _id: user._id,
-            pendingRequests: {
-                $in: [new mongoose.Types.ObjectId(userId)],
-            },
-        },
-        {
-            $pull: {
-                pendingRequests: new mongoose.Types.ObjectId(userId),
-            },
-            $addToSet: {
-                friends: new mongoose.Types.ObjectId(userId),
-            },
-        }
-    )
-}
-
-// send Friend Request
-userSchema.statics.declineFriendRequest = async function (user, userId) {
-    await this.findOneAndUpdate(
+    console.log("accept", user._id)
+    const friend = await this.findOneAndUpdate(
         {
             _id: user._id,
             pendingRequests: {
@@ -344,8 +325,59 @@ userSchema.statics.declineFriendRequest = async function (user, userId) {
             $pull: {
                 pendingRequests: userId,
             },
+            $addToSet: {
+                friends: userId,
+            },
         }
     )
+
+    if (!friend) throw new appError("Friend request does not accepted", 404)
+    await this.findOneAndUpdate(
+        {
+            _id: userId,
+        },
+        {
+            $pull: {
+                pendingRequests: user._id,
+            },
+            $addToSet: {
+                friends: user._id,
+            },
+        }
+    )
+}
+
+// send Friend Request
+userSchema.statics.declineFriendRequest = async function (user, userId) {
+    // adds userOne to user two friends amd vice versa
+    await promise.all([
+        this.findOneAndUpdate(
+            {
+                _id: user._id,
+                pendingRequests: {
+                    $in: [userId],
+                },
+            },
+            {
+                $pull: {
+                    pendingRequests: userId,
+                },
+            }
+        ),
+        this.findOneAndUpdate(
+            {
+                _id: userId,
+                pendingRequests: {
+                    $in: [user._id],
+                },
+            },
+            {
+                $pull: {
+                    pendingRequests: user._id,
+                },
+            }
+        ),
+    ])
 }
 
 // send Friend Request

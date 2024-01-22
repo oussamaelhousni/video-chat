@@ -80,17 +80,30 @@ conversationSchema.statics.getConversation = async function (
     conversationId,
     userId
 ) {
-    console.log(conversationId, userId)
     const [conversationOne, conversationTwo] = await Promise.all([
         this.findOne({
             userOne: userId,
             _id: conversationId,
             "deletedByUserOne.isDeleted": false,
+        }).populate({
+            path: "userOne",
+            select: {
+                fullName: 1,
+                profileImage: 1,
+                _id: 1,
+            },
         }),
         this.findOne({
             userTwo: userId,
             _id: conversationId,
             "deletedByUserTwo.isDeleted": false,
+        }).populate({
+            path: "userTwo",
+            select: {
+                fullName: 1,
+                profileImage: 1,
+                _id: 1,
+            },
         }),
     ])
 
@@ -140,6 +153,7 @@ conversationSchema.statics.createConversation = async function ({
     userOne,
     userTwo,
 }) {
+    console.log("users", { userOne, userTwo })
     // the user who request to create new  conversation also his id  is userOne
     const [conversationOne, conversationTwo] = await Promise.all([
         this.findOne({ userOne, userTwo }).select("deletedByUserOne"),
@@ -148,13 +162,13 @@ conversationSchema.statics.createConversation = async function ({
         ),
     ])
 
-    if (conversationOne && conversationOne.deletedByUserOne.isDeleted == true) {
+    if (conversationOne) {
         conversationOne.deletedByUserOne.isDeleted = false
         await conversationOne.save()
         return
     }
 
-    if (conversationTwo && conversationTwo.deletedByUserTwo.isDeleted == true) {
+    if (conversationTwo) {
         conversationTwo.deletedByUserTwo.isDeleted = false
         await conversationTwo.save()
         return
@@ -163,7 +177,83 @@ conversationSchema.statics.createConversation = async function ({
     return await conversationModel.create({ userOne, userTwo })
 }
 
-conversationSchema.pre("findOne", async function () {})
+// get all user conversations
+conversationSchema.statics.getConversations = async function (user) {
+    const conversations = await this.aggregate([
+        {
+            $match: {
+                $or: [
+                    {
+                        userOne: user._id,
+                    },
+                    {
+                        userTwo: user._id,
+                    },
+                ],
+            },
+        },
+        {
+            $addFields: {
+                me: {
+                    $cond: [
+                        { $eq: [user._id, "$userOne"] },
+                        "$userOne",
+                        "$userTwo",
+                    ],
+                },
+                deletedByMe: {
+                    $cond: [
+                        { $eq: [user._id, "$userOne"] },
+                        "$deletedByUserOne",
+                        "$deletedByUserTwo",
+                    ],
+                },
+                him: {
+                    $cond: [
+                        { $ne: [user._id, "$userOne"] },
+                        "$userOne",
+                        "$userTwo",
+                    ],
+                },
+            },
+        },
+        {
+            $match: {
+                "deletedByMe.isDeleted": false,
+            },
+        },
+        {
+            $lookup: {
+                from: "users",
+                localField: "him",
+                foreignField: "_id",
+                as: "user",
+            },
+        },
+        {
+            $unwind: "$user",
+        },
+        {
+            $replaceRoot: { newRoot: "$user" },
+        },
+        {
+            $project: {
+                _id: 1,
+                fullName: 1,
+                profileImage: 1,
+                email: 1,
+                isBlocked: {
+                    $cond: [
+                        { $in: ["$_id", user.blockedFriends] },
+                        true,
+                        false,
+                    ],
+                },
+            },
+        },
+    ])
+    return conversations
+}
 
 conversationSchema.index({ userOne: 1, userTwo: 1 }, { unique: true })
 

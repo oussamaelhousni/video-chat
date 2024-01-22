@@ -39,3 +39,13 @@ exports.getConversation = catchAsync(async (req, res, next) => {
         data: { conversation },
     })
 })
+
+// Route GET /api/v1/conversations
+// Description: get a user conversations
+// Access: Private
+exports.getUserConversations = catchAsync(async (req, res, next) => {
+    return res.status(200).json({
+        status: "success",
+        data: await conversationModel.getConversations(req.user),
+    })
+})

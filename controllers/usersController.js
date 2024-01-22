@@ -1,7 +1,7 @@
 const mongoose = require("mongoose")
 const { catchAsync, appError, handleSearch } = require("../utils")
 const { userEvents } = require("../events")
-const { userModel } = require("../models")
+const { userModel, conversationModel } = require("../models")
 const { CONNECTED_USERS } = require("../constants")
 
 // @desc   Search users
@@ -105,10 +105,24 @@ exports.cancelFriendRequest = catchAsync(async (req, res, next) => {
 // @access   private
 exports.acceptFriendRequest = catchAsync(async (req, res, next) => {
     await userModel.acceptFriendRequest(req.user, req.params.userId)
-
+    await conversationModel.createConversation({
+        userOne: req.user._id.toString(),
+        userTwo: req.params.userId,
+    })
+    // send request accepted event so in the client side we can get the new conversation (we sent it to one who send it and accept it at the same time)
+    userEvents.friendRequestAccepted(
+        req.app.get("io"),
+        req.params.userId,
+        req.user._id.toString()
+    )
+    userEvents.friendRequestAccepted(
+        req.app.get("io"),
+        req.user._id.toString(),
+        req.params.userId
+    )
     return res.status(200).json({
         type: "success",
-        message: "unfriend successfully",
+        message: "request accepted successfully",
     })
 })
 

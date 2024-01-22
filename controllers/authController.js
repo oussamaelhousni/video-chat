@@ -35,7 +35,9 @@ const confirmEmail = catchAsync(async (req, res, next) => {
 // @access   Public
 const login = catchAsync(async (req, res, next) => {
     const { email, password } = req.body
-    const user = await userModel.findOne({ email }).select("+password")
+    const user = await userModel
+        .findOne({ email })
+        .select("+password +blockedFriends")
     if (!user || !(await user.comparePasswords(user.password, password)))
         throw new appError("Invalid Credentials", 400)
 
