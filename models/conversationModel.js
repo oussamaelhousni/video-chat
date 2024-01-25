@@ -231,24 +231,69 @@ conversationSchema.statics.getConversations = async function (user) {
             },
         },
         {
+            $lookup: {
+                from: "messages",
+                let: {
+                    conversationId: "$_id",
+                    me: "$me",
+                },
+                pipeline: [
+                    {
+                        $sort: {
+                            _id: -1,
+                        },
+                    },
+                    {
+                        $match: {
+                            $expr: {
+                                $eq: ["$$conversationId", "$conversation"],
+                            },
+                            $or: [
+                                {
+                                    $expr: {
+                                        $eq: ["$$me", "$sender"],
+                                        $eq: ["$isDeletedBySender", false],
+                                    },
+                                },
+                                {
+                                    $expr: {
+                                        $eq: ["$$me", "$receiver"],
+                                        $eq: ["$isDeleteByReceiver", false],
+                                    },
+                                },
+                            ],
+                        },
+                    },
+
+                    {
+                        $limit: 1,
+                    },
+                    {
+                        $project: {
+                            _id: 1,
+                            sender: 1,
+                            receiver: 1,
+                            type: 1,
+                            text: 1,
+                            createdAt: 1,
+                            updatedAt: 1,
+                            isSeen: 1,
+                            isDelivered: 1,
+                            url: 1,
+                            audio: 1,
+                        },
+                    },
+                ],
+                as: "lastMessage",
+            },
+        },
+        {
             $unwind: "$user",
         },
         {
-            $replaceRoot: { newRoot: "$user" },
-        },
-        {
-            $project: {
-                _id: 1,
-                fullName: 1,
-                profileImage: 1,
-                email: 1,
-                isBlocked: {
-                    $cond: [
-                        { $in: ["$_id", user.blockedFriends] },
-                        true,
-                        false,
-                    ],
-                },
+            $unwind: {
+                path: "$lastMessage",
+                preserveNullAndEmptyArrays: true,
             },
         },
     ])

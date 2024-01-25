@@ -46,6 +46,8 @@ exports.getConversation = catchAsync(async (req, res, next) => {
 exports.getUserConversations = catchAsync(async (req, res, next) => {
     return res.status(200).json({
         status: "success",
-        data: await conversationModel.getConversations(req.user),
+        data: {
+            conversations: await conversationModel.getConversations(req.user),
+        },
     })
 })

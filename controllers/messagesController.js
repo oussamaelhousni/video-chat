@@ -14,6 +14,7 @@ exports.createMessage = catchAsync(async (req, res, next) => {
     const message = await messageModel.create({
         conversation: req.params.conversationId,
         ...req.body,
+        sender: req.user._id,
     })
 
     if (

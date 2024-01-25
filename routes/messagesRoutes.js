@@ -2,7 +2,7 @@ const express = require("express")
 
 const { CONNECTED_USERS } = require("../constants")
 const { messagesController } = require("../controllers")
-const { upload } = require("../middlewares")
+const { upload, protect } = require("../middlewares")
 
 const router = express.Router({ mergeParams: true })
 
@@ -20,6 +20,7 @@ const isDelivered = (req, res, next) => {
 }
 
 router.route("/").post(
+    protect,
     upload.fields([
         { name: "image", maxCount: 1 },
         { name: "video", maxCount: 1 },
