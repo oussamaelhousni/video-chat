@@ -1,4 +1,6 @@
 const mongoose = require("mongoose")
+const userModel = require("./userModel")
+const conversationModel = require("./conversationModel")
 
 const callSchema = new mongoose.Schema({
     isAnswered: {
@@ -70,6 +72,78 @@ const messageSchema = new mongoose.Schema(
     },
     { timestamps: true }
 )
+
+messageSchema.statics.getConversationMessages = async function (
+    conversationId,
+    userId
+) {
+    const messages = await this.aggregate([
+        {
+            $sort: {
+                _id: 1,
+            },
+        },
+        {
+            $match: {
+                conversation: new mongoose.Types.ObjectId(conversationId),
+                $or: [
+                    {
+                        sender: userId,
+                        isDeletedBySender: false,
+                    },
+                    {
+                        receiver: userId,
+                        isDeletedByReceiver: false,
+                    },
+                ],
+            },
+        },
+    ])
+
+    const receiver = await conversationModel.aggregate([
+        {
+            $match: {
+                _id: new mongoose.Types.ObjectId(conversationId),
+            },
+        },
+        {
+            $project: {
+                receiverInfo: {
+                    $cond: [
+                        {
+                            $ne: [
+                                "$userOne",
+                                new mongoose.Types.ObjectId(userId),
+                            ],
+                        },
+                        "$userOne",
+                        "$userTwo",
+                    ],
+                },
+            },
+        },
+        {
+            $lookup: {
+                from: "users",
+                localField: "receiverInfo",
+                foreignField: "_id",
+                as: "receiver",
+            },
+        },
+        { $unwind: "$receiver" },
+        {
+            $project: {
+                "receiver.fullName": 1,
+                "receiver.profileImage": 1,
+                "receiver.email": 1,
+            },
+        },
+    ])
+    return {
+        messages: messages || [],
+        receiver: receiver[0]?.receiver || null,
+    }
+}
 
 const messageModel = mongoose.model("Message", messageSchema)
 

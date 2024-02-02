@@ -19,15 +19,18 @@ const isDelivered = (req, res, next) => {
     next()
 }
 
-router.route("/").post(
-    protect,
-    upload.fields([
-        { name: "image", maxCount: 1 },
-        { name: "video", maxCount: 1 },
-    ]),
-    addTypeFieldToBody,
-    isDelivered,
-    messagesController.createMessage
-)
+router
+    .route("/")
+    .post(
+        protect,
+        upload.fields([
+            { name: "image", maxCount: 1 },
+            { name: "video", maxCount: 1 },
+        ]),
+        addTypeFieldToBody,
+        isDelivered,
+        messagesController.createMessage
+    )
+    .get(protect, messagesController.getMessages)
 
 module.exports = router

@@ -31,3 +31,16 @@ exports.createMessage = catchAsync(async (req, res, next) => {
         data: { message },
     })
 })
+
+// Route: POST /api/v1/conversations/:conversationId/messages
+// Description: create new message in a conversation
+// Access: Private
+exports.getMessages = catchAsync(async (req, res, next) => {
+    return res.status(201).json({
+        status: "success",
+        data: await messageModel.getConversationMessages(
+            req.params.conversationId,
+            req.user._id
+        ),
+    })
+})
