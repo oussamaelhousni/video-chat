@@ -136,6 +136,7 @@ messageSchema.statics.getConversationMessages = async function (
                 "receiver.fullName": 1,
                 "receiver.profileImage": 1,
                 "receiver.email": 1,
+                "receiver._id": 1,
             },
         },
     ])

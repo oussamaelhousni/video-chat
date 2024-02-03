@@ -17,11 +17,12 @@ exports.createMessage = catchAsync(async (req, res, next) => {
         sender: req.user._id,
     })
 
+    // send message socket notification to receiver
     if (
         CONNECTED_USERS.get(req.body.receiver) &&
         CONNECTED_USERS.get(req.body.receiver).length > 0
     ) {
-        CONNECTED_USERS.get(req.body.receiver).forEach((id) => {
+        CONNECTED_USERS.get(req.body.receiver)?.forEach((id) => {
             io.to(id).emit("message", message)
         })
     }

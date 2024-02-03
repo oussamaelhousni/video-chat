@@ -8,8 +8,14 @@ const router = express.Router({ mergeParams: true })
 
 const addTypeFieldToBody = (req, res, next) => {
     req.body.type = req.body.type || "text"
-    if (req.body.type !== "text") {
+    if (req.body.type === "video") {
         req.body.url = req.files.video[0]?.filename
+    }
+    if (req.body.type === "audio") {
+        req.body.url = req.files.audio[0]?.filename
+    }
+    if (req.body.type === "image") {
+        req.body.url = req.files.image[0]?.filename
     }
     next()
 }
@@ -23,10 +29,13 @@ router
     .route("/")
     .post(
         protect,
+
         upload.fields([
             { name: "image", maxCount: 1 },
             { name: "video", maxCount: 1 },
+            { name: "audio", maxCount: 1 },
         ]),
+
         addTypeFieldToBody,
         isDelivered,
         messagesController.createMessage

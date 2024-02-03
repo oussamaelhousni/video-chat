@@ -12,6 +12,8 @@ const storage = multer.diskStorage({
         } else if (mimeType.startsWith("video")) {
             req.body.type = "video"
             return cb(null, `${__dirname}/../public/videos`)
+        } else if (mimeType.startsWith("audio")) {
+            return cb(null, `${__dirname}/../public/audios`)
         }
     },
 
@@ -23,11 +25,12 @@ const storage = multer.diskStorage({
 const fileFilter = function (req, file, cb) {
     if (
         file.mimetype.startsWith("image") ||
-        file.mimetype.startsWith("video")
+        file.mimetype.startsWith("video") ||
+        file.mimetype.startsWith("audio")
     ) {
         return cb(null, true)
     }
-    cb(new appError("Only audios and videos are  allowed", 400))
+    cb(new appError("Only audios and videos and images are  allowed", 400))
 }
 
 const upload = multer({ storage: storage, fileFilter })
