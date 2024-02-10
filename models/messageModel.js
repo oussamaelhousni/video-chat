@@ -41,7 +41,7 @@ const messageSchema = new mongoose.Schema(
         },
         type: {
             type: String,
-            enum: ["audio", "text", "call", "video"],
+            enum: ["audio", "text", "call", "video", "image"],
             default: "text",
         },
         // place of the media on the disk

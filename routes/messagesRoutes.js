@@ -8,14 +8,15 @@ const router = express.Router({ mergeParams: true })
 
 const addTypeFieldToBody = (req, res, next) => {
     req.body.type = req.body.type || "text"
+    console.log("hho", req.files)
     if (req.body.type === "video") {
         req.body.url = req.files.video[0]?.filename
     }
     if (req.body.type === "audio") {
         req.body.url = req.files.audio[0]?.filename
     }
-    if (req.body.type === "image") {
-        req.body.url = req.files.image[0]?.filename
+    if (req.body.type === "image" || req.body.type[0] === "image") {
+        req.body.url = req.files.image[0].filename
     }
     next()
 }

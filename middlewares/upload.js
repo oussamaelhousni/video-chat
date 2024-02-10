@@ -7,10 +7,8 @@ const storage = multer.diskStorage({
     destination: function (req, file, cb) {
         const mimeType = file.mimetype
         if (mimeType.startsWith("image")) {
-            req.body.type = "image"
             return cb(null, `${__dirname}/../public/images`)
         } else if (mimeType.startsWith("video")) {
-            req.body.type = "video"
             return cb(null, `${__dirname}/../public/videos`)
         } else if (mimeType.startsWith("audio")) {
             return cb(null, `${__dirname}/../public/audios`)
